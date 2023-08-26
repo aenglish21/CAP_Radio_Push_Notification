@@ -1,24 +1,44 @@
 import os
 import time
 import winsound
+import json
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+CONFIG_FILE = "config.json"
+
 class FileUpdateHandler(FileSystemEventHandler):
-    def __init__(self, target_file):
-        self.target_file = target_file
+    def __init__(self, config):
+        self.config = config
 
     def on_modified(self, event):
-        if not event.is_directory and event.src_path == self.target_file:
+        if not event.is_directory and event.src_path == self.config["target_file"]:
             print(f"Target file {event.src_path} has been updated.")
-            sound_file_path = "C:/Users/aenglish/Downloads/AOl You Got Mail.wav"  # Corrected sound file path
+            sound_file_path = self.config["sound_file"]
             winsound.PlaySound(sound_file_path, winsound.SND_FILENAME)
 
-if __name__ == "__main__":
-    target_folder = "C:/Users/aenglish/Desktop/CAPDIRECT-Alarm"  # Replace with the actual path to the folder you want to monitor
-    target_file = os.path.join(target_folder, "messages.db")  # Replace with the actual target file name
+def load_config():
+    if not os.path.exists(CONFIG_FILE):
+        default_config = {
+            "target_folder": "C:/Users/aenglish/Desktop/CAPDIRECT-Alarm",
+            "target_file": "messages.db",
+            "sound_file": "C:/Users/aenglish/Downloads/AOl You Got Mail.wav"
+        }
+        with open(CONFIG_FILE, "w") as config_file:
+            json.dump(default_config, config_file, indent=4)
+        return default_config
 
-    event_handler = FileUpdateHandler(target_file)
+    with open(CONFIG_FILE, "r") as config_file:
+        config = json.load(config_file)
+    return config
+
+if __name__ == "__main__":
+    config = load_config()
+
+    target_folder = config["target_folder"]
+    target_file = os.path.join(target_folder, config["target_file"])
+
+    event_handler = FileUpdateHandler(config)
     observer = Observer()
     observer.schedule(event_handler, path=target_folder)
     observer.start()
