@@ -5,7 +5,7 @@ import json
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-CONFIG_FILE = "config.json"
+CONFIG_FILE = "config.json"  #Config File
 
 class FileUpdateHandler(FileSystemEventHandler):
     def __init__(self, config):
